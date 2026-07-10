@@ -1,6 +1,7 @@
 {
   "name": "opsforge",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "directories": {
@@ -8,18 +9,20 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky"
+    "prepare": "husky",
+    "dev": "tsx watch apps/api/src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
+    "@types/node": "^26.1.1",
     "eslint": "^10.6.0",
     "husky": "^9.1.7",
     "prettier": "^3.9.4",
+    "tsx": "^4.23.0",
     "typescript": "^6.0.3"
   },
   "dependencies": {
