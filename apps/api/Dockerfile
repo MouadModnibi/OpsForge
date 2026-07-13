@@ -5,7 +5,7 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 RUN npx tsc
-
+#t
 # Stage 2: minimal runtime
 FROM node:20-alpine AS runner
 WORKDIR /app
