@@ -47,3 +47,6 @@ jobs:
           file: apps/api/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/opsforge-api:${{ github.sha }}
+          
+      - name: Run tests
+        run: npm test
