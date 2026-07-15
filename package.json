@@ -10,7 +10,8 @@
   "scripts": {
     "test": "vitest run",
     "prepare": "husky",
-    "dev": "tsx watch apps/api/src/index.ts"
+    "dev": "tsx watch apps/api/src/index.ts",
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
