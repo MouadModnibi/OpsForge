@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opsforge-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: opsforge-api
+  template:
+    metadata:
+      labels:
+        app: opsforge-api
+    spec:
+      containers:
+        - name: api
+          image: mouadmodnibi/opsforge-api:f0138c0dd4ef1c348c67b9772366f06a46f755c1c
+          ports:
+            - containerPort: 3000
