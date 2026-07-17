@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: api
-          image: mouadmodnibi/opsforge-api:f0138c0dd4ef1c348c67b9772366f06a46f755c1c
+          image: mouadmodnibi/opsforge-api:f0138c0dd4ef1c348c67b9772366f06a46f755c1
           ports:
             - containerPort: 3000
