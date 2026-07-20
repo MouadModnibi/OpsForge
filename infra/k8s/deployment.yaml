@@ -17,3 +17,6 @@ spec:
           image: mouadmodnibi/opsforge-api:f0138c0dd4ef1c348c67b9772366f06a46f755c1
           ports:
             - containerPort: 3000
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://postgres:password@postgres-service:5432/opsforge"
