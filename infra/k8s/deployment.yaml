@@ -19,4 +19,7 @@ spec:
             - containerPort: 3000
           env:
             - name: DATABASE_URL
-              value: "postgresql://postgres:password@postgres-service:5432/opsforge"
+              valueFrom:
+                secretKeyRef:
+                  name: api-secret
+                  key: DATABASE_URL
