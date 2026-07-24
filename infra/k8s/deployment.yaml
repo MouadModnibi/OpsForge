@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: opsforge-api
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: opsforge-api
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: mouadmodnibi/opsforge-api:a353713bb136630dda64febde54055984f520a57
+          image: mouadmodnibi/opsforge-api:6ac68fc4375ae27af9ff13c445fd10f5958a6253
           ports:
             - containerPort: 3000
           env:
