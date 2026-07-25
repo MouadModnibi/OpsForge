@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: opsforge-api-ingress
+spec:
+  rules:
+    - host: opsforge.51.170.141.240.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: opsforge-api-service
+                port:
+                  number: 80
