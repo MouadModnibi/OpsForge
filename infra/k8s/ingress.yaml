@@ -4,7 +4,7 @@ metadata:
   name: opsforge-api-ingress
 spec:
   rules:
-    - host: opsforge.51.170.141.240.nip.io
+    - host: opsforge.duckdns.org
       http:
         paths:
           - path: /

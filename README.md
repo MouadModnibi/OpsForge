@@ -1,6 +1,6 @@
 # OpsForge
 
-A hands-on DevOps portfolio project: a minimal Fastify API, containerized, tested and scanned in CI, deployed to a real Kubernetes cluster on a cloud VM, and continuously synced with GitOps (ArgoCD).
+A hands-on DevOps project: a minimal Fastify API, containerized, tested and scanned in CI, deployed to a real Kubernetes cluster on a cloud VM, and continuously synced with GitOps (ArgoCD).
 
 The application itself is intentionally simple — the real point of this project is everything *around* it: the pipeline, the infrastructure, and the deployment automation.
 
