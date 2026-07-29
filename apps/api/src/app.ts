@@ -1,4 +1,4 @@
-import Fastify from "fastify";
+import Fastify, { type FastifyRequest } from "fastify";
 import { Client } from "pg";
 import * as promClient from "prom-client";
 
@@ -27,14 +27,14 @@ export function buildApp() {
   });
 
   // Start timer
-  app.addHook("onRequest", async (request: any) => {
+  app.addHook("onRequest", async (request: FastifyRequest & { startTime?: bigint }) => {
     request.startTime = process.hrtime.bigint();
   });
 
   // Record metrics
-  app.addHook("onResponse", async (request: any, reply) => {
+  app.addHook("onResponse", async (request: FastifyRequest & { startTime?: bigint }, reply) => {
     const duration =
-      Number(process.hrtime.bigint() - request.startTime) / 1e9;
+  Number(process.hrtime.bigint() - (request.startTime ?? process.hrtime.bigint())) / 1e9;
 
     const route = request.routeOptions?.url || request.url;
 
