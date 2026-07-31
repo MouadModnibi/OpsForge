@@ -1,165 +1,423 @@
 # OpsForge
 
-A hands-on DevOps project: a minimal Fastify API, containerized, tested and scanned in CI, deployed to a real Kubernetes cluster on a cloud VM, and continuously synced with GitOps (ArgoCD).
+> A production-style DevOps platform demonstrating CI/CD, GitOps, Infrastructure as Code, Kubernetes, Monitoring, and Cloud deployment.
 
-The application itself is intentionally simple — the real point of this project is everything *around* it: the pipeline, the infrastructure, and the deployment automation.
+OpsForge is a self-hosted DevOps platform built to simulate how modern cloud-native applications are developed and deployed in production.
+
+While the API itself is intentionally simple, the project focuses on everything around it:
+
+- Infrastructure as Code with Terraform
+- Continuous Integration with GitHub Actions
+- Docker multi-architecture builds
+- Kubernetes (k3s)
+- GitOps with Argo CD
+- HTTPS using Traefik + cert-manager + Let's Encrypt
+- Monitoring with Prometheus & Grafana
+- Deployment on Oracle Cloud Infrastructure (OCI)
 
 ---
 
-## Architecture
+# Architecture
 
+```mermaid
+flowchart LR
+
+subgraph Development
+A[Developer]
+B[GitHub]
+C[GitHub Actions]
+end
+
+subgraph Registry
+D[Docker Hub]
+end
+
+subgraph Cloud
+E[Terraform]
+F[Oracle Cloud VM]
+G[k3s Kubernetes]
+H[Traefik]
+I[OpsForge API]
+J[(PostgreSQL)]
+K[Prometheus]
+L[Grafana]
+M[Argo CD]
+end
+
+A -->|Push| B
+B --> C
+C -->|Build & Push| D
+D -->|Image| M
+B -->|Kubernetes Manifests| M
+M --> G
+
+E --> F
+F --> G
+
+G --> H
+H --> I
+I --> J
+I -->|Metrics| K
+K --> L
 ```
-Developer
-   │  git push
-   ▼
-GitHub Actions (CI)
-   │  lint → test → build (TypeScript) → security audit (npm audit)
-   │  build multi-arch Docker image (amd64 + arm64)
-   │  push image to Docker Hub, tagged with the commit SHA
-   ▼
-Docker Hub (image registry)
-   │
-   ▼
-ArgoCD (GitOps controller, running inside the cluster)
-   │  watches infra/k8s/ on GitHub
-   │  auto-syncs any change — no manual kubectl needed
-   ▼
-Kubernetes (k3s) — Oracle Cloud VM (ARM / aarch64)
-   ├── opsforge-api Deployment (3 replicas)
-   ├── opsforge-api-service (NodePort)
-   ├── postgres Deployment (1 replica, PersistentVolumeClaim)
-   └── postgres-service (ClusterIP)
-```
+
+# Features
+
+- Infrastructure provisioned with Terraform
+- GitHub Actions CI pipeline
+- Docker multi-stage & multi-architecture builds
+- Docker Hub image publishing
+- Kubernetes (k3s)
+- GitOps using Argo CD
+- HTTPS with Traefik + cert-manager + Let's Encrypt
+- PostgreSQL with Persistent Volumes
+- Kubernetes Secrets
+- Prometheus monitoring
+- Grafana dashboards
+- Health & readiness endpoints
+- Application metrics using Prometheus
+- Conventional Commits
+- Husky Git hooks
+- ESLint
+- Vitest
 
 ---
 
-## Tech stack
+# Tech Stack
 
-| Category            | Tool(s)                                             |
-|----------------------|------------------------------------------------------|
-| App runtime           | Node.js, TypeScript, Fastify                         |
-| Local dev             | Docker, Docker Compose (API + Postgres + Redis)      |
-| CI                    | GitHub Actions (lint, test, build, `npm audit`)      |
-| Container registry     | Docker Hub (multi-arch: `linux/amd64`, `linux/arm64`) |
-| Orchestration          | Kubernetes (k3s), running on an Oracle Cloud VM (ARM) |
-| GitOps / CD            | ArgoCD                                                |
-| Secrets                | Kubernetes Secrets (DB credentials, connection string) |
-| Commit conventions      | Conventional Commits, enforced via Husky + Commitlint |
+| Category | Technologies |
+|-----------|--------------|
+| Backend | Node.js, TypeScript, Fastify |
+| Database | PostgreSQL |
+| Cache | Redis |
+| Containers | Docker, Docker Compose |
+| CI | GitHub Actions |
+| Registry | Docker Hub |
+| IaC | Terraform |
+| Kubernetes | k3s |
+| GitOps | Argo CD |
+| Ingress | Traefik |
+| TLS | cert-manager + Let's Encrypt |
+| Monitoring | Prometheus |
+| Dashboards | Grafana |
+| Cloud | Oracle Cloud Infrastructure |
+| Testing | Vitest |
+| Linting | ESLint |
 
 ---
 
-## Repository structure
+# Project Structure
 
 ```
 opsforge/
+│
 ├── apps/
 │   └── api/
 │       ├── src/
-│       │   ├── app.ts        # Fastify app definition (routes)
-│       │   ├── app.test.ts   # Vitest test for /health
-│       │   └── index.ts      # Server entrypoint (starts the app)
-│       └── Dockerfile        # Multi-stage build (builder + runner)
+│       │   ├── app.ts
+│       │   ├── index.ts
+│       │   └── app.test.ts
+│       └── Dockerfile
+│
 ├── infra/
+│   ├── terraform/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── terraform.tfvars
+│   │
 │   └── k8s/
-│       ├── deployment.yaml   # API Deployment (3 replicas)
-│       ├── service.yaml      # API Service (NodePort)
-│       └── postgres.yaml     # Postgres Deployment + PVC + Service
-├── docs/
-│   └── git-strategy.md       # Branching model
+│       ├── deployment.yaml
+│       ├── service.yaml
+│       ├── ingress.yaml
+│       ├── postgres.yaml
+│       ├── secrets.yaml
+│       ├── servicemonitor.yaml
+│       └── clusterissuer.yaml
+│
 ├── .github/
 │   └── workflows/
-│       └── ci.yml            # CI pipeline
-├── docker-compose.yml         # Local dev stack (API + Postgres + Redis)
+│       └── ci.yml
+│
+├── docker-compose.yml
 ├── docker-compose.override.yml
+├── package.json
 └── README.md
 ```
 
 ---
 
-## Application endpoints
+# CI/CD Pipeline
 
-| Route      | Purpose                                                        |
-|------------|------------------------------------------------------------------|
-| `GET /health` | Liveness check — confirms the process is up.                   |
-| `GET /ready`  | Readiness check — opens a real connection to Postgres and runs `SELECT 1`. Returns `200 {"status":"ready"}` on success, `503` if the database is unreachable. |
+Every push to `main` triggers GitHub Actions.
 
----
+The pipeline performs:
 
-## CI pipeline (`.github/workflows/ci.yml`)
-
-On every push/PR to `main`:
-
-1. **Checkout** the repository
-2. **Install** dependencies (`npm ci`)
-3. **Lint** (`eslint`)
-4. **Test** (`vitest`, using Fastify's `.inject()` — no real network calls)
-5. **Build** (`tsc`)
-6. **Security audit** (`npm audit --audit-level=high`) — blocks the pipeline on any high/critical vulnerability
-7. **Build & push a multi-arch Docker image** (`linux/amd64` + `linux/arm64`, via Buildx + QEMU) to Docker Hub, tagged with the full commit SHA
-8. Layers are cached between runs (`cache-from`/`cache-to: type=gha`) to keep multi-arch build times reasonable
-
-> Multi-arch builds were required because the production cluster runs on an ARM (Oracle Ampere `A1.Flex`) VM, while local development happens on amd64 (Windows/Docker Desktop).
+1. Checkout repository
+2. Install dependencies
+3. ESLint
+4. Run tests (Vitest)
+5. Build TypeScript
+6. Security audit (`npm audit`)
+7. Build Docker image
+8. Build multi-architecture image (`amd64` + `arm64`)
+9. Push image to Docker Hub
+10. Update Kubernetes manifests
+11. Argo CD detects changes and deploys automatically
 
 ---
 
-## Kubernetes setup
+# Infrastructure
 
-- **API**: `Deployment` with 3 replicas, exposed via a `NodePort` `Service`.
-- **Postgres**: `Deployment` with 1 replica (intentionally never scaled — a single Postgres instance shouldn't run as multiple uncoordinated replicas), backed by a `PersistentVolumeClaim` so data survives Pod restarts.
-- **Secrets**: the database password and the API's `DATABASE_URL` are stored as Kubernetes `Secret` objects (`postgres-secret`, `api-secret`) and injected via `secretKeyRef` — never committed to git in plaintext.
-- Local development/testing of the manifests was first done against a disposable [Kind](https://kind.sigs.k8s.io/) cluster before moving to the real cloud VM.
+The infrastructure is provisioned using **Terraform** on **Oracle Cloud Infrastructure (OCI)**.
 
----
+Terraform manages:
 
-## GitOps with ArgoCD
+- Compute Instance
+- Virtual Cloud Network
+- Security Rules
+- SSH Keys
+- Networking
 
-ArgoCD runs inside the same cluster and watches the `infra/k8s/` path of this repository (branch `main`). Sync policy is automatic with self-heal enabled, meaning:
-
-- Any change committed to `infra/k8s/*.yaml` is automatically applied to the cluster within ArgoCD's polling interval — no manual `kubectl apply` required.
-- Any manual, out-of-band change made directly to the cluster (e.g. via `kubectl edit`) is automatically reverted back to match what's defined in git.
-
-This closes the loop between **CI** (build and publish an image) and **CD** (actually run that image) — the only two things a developer needs to do are write code and commit configuration changes; everything else is automatic.
+This allows the complete infrastructure to be recreated from code.
 
 ---
 
-## Local development
+# Kubernetes
+
+The application runs on a **k3s Kubernetes cluster**.
+
+Resources include:
+
+- Deployment
+- Service
+- Ingress
+- Secrets
+- PersistentVolumeClaim
+- Configurations managed by Git
+
+The API is deployed with **3 replicas** for high availability.
+
+PostgreSQL uses persistent storage so data survives pod restarts.
+
+---
+
+# GitOps
+
+Argo CD continuously watches this repository.
+
+Whenever Kubernetes manifests change:
+
+```
+Git Commit
+        │
+        ▼
+GitHub Repository
+        │
+        ▼
+Argo CD
+        │
+        ▼
+Kubernetes Cluster
+```
+
+No manual `kubectl apply` commands are required.
+
+Git becomes the single source of truth.
+
+---
+
+# HTTPS
+
+The application is exposed through:
+
+- Traefik Ingress
+- cert-manager
+- Let's Encrypt
+
+Certificates are automatically:
+
+- Requested
+- Installed
+- Renewed
+
+---
+
+# Monitoring
+
+The project includes a complete monitoring stack.
+
+## Prometheus
+
+Prometheus automatically scrapes:
+
+- Kubernetes metrics
+- Node metrics
+- Application metrics
+
+The Fastify API exposes:
+
+```
+GET /metrics
+```
+
+using **prom-client**.
+
+Collected metrics include:
+
+- HTTP Requests
+- Request Duration
+- CPU Usage
+- Memory Usage
+- Event Loop
+- Garbage Collection
+
+---
+
+## Grafana
+
+Grafana is connected to Prometheus.
+
+Dashboards visualize:
+
+- CPU Usage
+- Memory Usage
+- Pod Status
+- Node Status
+- Request Rate
+- Request Duration
+- Error Rate
+- Kubernetes Cluster Health
+
+---
+
+# Application Endpoints
+
+| Endpoint | Description |
+|-----------|-------------|
+| `/health` | Liveness Probe |
+| `/ready` | Readiness Probe |
+| `/metrics` | Prometheus Metrics |
+
+---
+
+# Local Development
+
+Clone the repository
 
 ```bash
 git clone https://github.com/MouadModnibi/OpsForge.git
-cd OpsForge
+```
+
+Install dependencies
+
+```bash
 npm install
+```
+
+Start locally
+
+```bash
 docker compose up --build
 ```
 
-- API available at `http://localhost:3000`
-- `GET /health` and `GET /ready` should both return `200`
+Application:
 
-Run tests and lint locally before pushing:
-```bash
-npm run lint
-npm test
+```
+http://localhost:3000
+```
+
+Metrics:
+
+```
+http://localhost:3000/metrics
 ```
 
 ---
 
-## What this project demonstrates
+# Production Stack
 
-- Multi-stage Docker builds (small, non-root-ready runtime images)
-- A real CI pipeline: lint → test → build → security scan → publish
-- Multi-architecture image builds (amd64 + arm64) to support heterogeneous infrastructure
-- Kubernetes fundamentals: Deployments, Services (ClusterIP & NodePort), Secrets, PersistentVolumeClaims
-- Deploying and operating a real cluster on cloud infrastructure (Oracle Cloud, ARM)
-- GitOps: using git as the single source of truth for cluster state, via ArgoCD
+Oracle Cloud VM
 
-## Possible next steps
+↓
 
-- Infrastructure as Code (Terraform) for provisioning the VM itself
-- Ingress + a real domain, replacing the current NodePort setup
-- Observability stack (Prometheus, Grafana) for metrics and dashboards
-- Helm chart to package the raw manifests for reuse across environments
+Terraform
+
+↓
+
+k3s Kubernetes
+
+↓
+
+Traefik
+
+↓
+
+HTTPS
+
+↓
+
+OpsForge API
+
+↓
+
+PostgreSQL
+
+↓
+
+Prometheus
+
+↓
+
+Grafana
 
 ---
 
-## Author
+# Future Improvements
 
-Built by [Mouad Modnibi](https://github.com/MouadModnibi) as a self-directed DevOps learning project.
+- Helm Charts
+- Horizontal Pod Autoscaler
+- Loki for centralized logging
+- Tempo for distributed tracing
+- OpenTelemetry
+- Multiple environments (Development / Staging / Production)
+- Kubernetes Network Policies
+- External Secrets
+- Backup & Restore automation
+- Blue/Green Deployments
+
+---
+
+# What This Project Demonstrates
+
+- Infrastructure as Code
+- CI/CD
+- GitOps
+- Docker
+- Kubernetes
+- Cloud Deployment
+- Monitoring
+- Observability
+- Production-style architecture
+- Secure HTTPS deployment
+- Multi-architecture container builds
+- Modern DevOps practices
+
+---
+
+# Author
+
+**Mouad Modnibi**
+
+Engineering Student in Networks & Information Systems
+
+Interested in:
+
+- DevOps
+- Cloud Computing
+- Platform Engineering
+- Kubernetes
+- Infrastructure as Code
+- Site Reliability Engineering (SRE)
+- AI
+
+GitHub: https://github.com/MouadModnibi
