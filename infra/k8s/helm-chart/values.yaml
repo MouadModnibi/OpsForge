@@ -1,0 +1,34 @@
+replicaCount: 3
+
+image:
+  repository: mouadmodnibi/opsforge-api
+  tag: "6ac68fc4375ae27af9ff13c445fd10f5958a6253"
+
+containerPort: 3000
+
+postgres:
+  storageSize: "1Gi"
+  user: "postgres"
+  dbName: "opsforge"
+  secretName: "postgres-secret"
+  image:
+    repository: "postgres"
+    tag: "16-alpine"
+
+service:
+  name: "http"
+  port: 80
+  protocol: "TCP"
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  host: "opsforge.duckdns.org"
+  clusterIssuer: "letsencrypt-prod"
+
+serviceMonitor:
+  enabled: true
+  prometheusRelease: "monitoring"  
+  targetNamespace: "default"      
+  path: "/metrics"
+  interval: "15s"

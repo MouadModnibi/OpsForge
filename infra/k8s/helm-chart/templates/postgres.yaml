@@ -1,42 +1,44 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-pvc
+  name: {{ .Release.Name }}-postgres-pvc
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: {{ .Values.postgres.storageSize | default "1Gi" }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres
+  name: {{ .Release.Name }}-postgres
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
+      app: {{ .Release.Name }}-postgres
   template:
     metadata:
       labels:
-        app: postgres
+        app: {{ .Release.Name }}-postgres
     spec:
       containers:
         - name: postgres
-          image: postgres:16-alpine
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
           ports:
             - containerPort: 5432
           env:
             - name: POSTGRES_USER
-              value: postgres
+              value: {{ .Values.postgres.user | default "postgres" | quote }}
             - name: POSTGRES_DB
-              value: opsforge
+              value: {{ .Values.postgres.dbName | default "opsforge" | quote }}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: postgres-secret
+                  name: {{ .Values.postgres.secretName | default "postgres-secret" }}
                   key: POSTGRES_PASSWORD
           volumeMounts:
             - name: postgres-storage
@@ -44,15 +46,15 @@ spec:
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
-            claimName: postgres-pvc
+            claimName: {{ .Release.Name }}-postgres-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres-service
+  name: {{ .Release.Name }}-postgres-service
 spec:
   selector:
-    app: postgres
+    app: {{ .Rease.Name }}el-postgres
   ports:
     - protocol: TCP
       port: 5432
