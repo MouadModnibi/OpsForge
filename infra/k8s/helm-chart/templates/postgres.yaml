@@ -54,7 +54,7 @@ metadata:
   name: {{ .Release.Name }}-postgres-service
 spec:
   selector:
-    app: {{ .Release.Name }}el-postgres
+    app: {{ .Release.Name }}-postgres
   ports:
     - protocol: TCP
       port: 5432
