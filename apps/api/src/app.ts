@@ -85,6 +85,7 @@ export function buildApp() {
   });
 
   // Page 404 personnalisée avec CSS
+  // Page 404 personnalisée avec CSS
   app.setNotFoundHandler((request, reply) => {
     const jsonPayload = JSON.stringify({
       message: `Route ${request.method}:${request.url} not found`,
@@ -92,74 +93,70 @@ export function buildApp() {
       statusCode: 404,
     });
 
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 Not Found</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      max-width: 500px;
+      width: 100%;
+      padding: 1.5rem;
+    }
+    .status-tag {
+      display: inline-block;
+      background-color: #ef4444;
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 0.25rem 0.625rem;
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    pre {
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 1rem;
+      color: #38bdf8;
+      font-size: 0.875rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="status-tag">404 Error</span>
+    <pre>${jsonPayload}</pre>
+  </div>
+</body>
+</html>`;
+
     reply
-      .code(404)
-      .type("text/html")
-      .send(`
-        <!DOCTYPE html>
-        <html lang="fr">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>404 Non Trouvé</title>
-          <style>
-            * {
-              box-sizing: border-box;
-              margin: 0;
-              padding: 0;
-            }
-            body {
-              background: #0f172a;
-              color: #f8fafc;
-              font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              min-height: 100vh;
-              padding: 1rem;
-            }
-            .card {
-              background: #1e293b;
-              border: 1px solid #334155;
-              border-radius: 12px;
-              box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-              max-width: 500px;
-              width: 100%;
-              padding: 1.5rem;
-            }
-            .status-tag {
-              display: inline-block;
-              background-color: #ef4444;
-              color: #ffffff;
-              font-size: 0.75rem;
-              font-weight: bold;
-              padding: 0.25rem 0.625rem;
-              border-radius: 9999px;
-              margin-bottom: 1rem;
-              text-transform: uppercase;
-              letter-spacing: 0.05em;
-            }
-            pre {
-              background-color: #0f172a;
-              border: 1px solid #334155;
-              border-radius: 8px;
-              padding: 1rem;
-              color: #38bdf8;
-              font-size: 0.875rem;
-              overflow-x: auto;
-              white-space: pre-wrap;
-              word-break: break-all;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <span class="status-tag">404 Error</span>
-            <pre>${jsonPayload}</pre>
-          </div>
-        </body>
-        </html>
-      `);
+      .status(404)
+      .header('Content-Type', 'text/html; charset=utf-8')
+      .send(htmlContent);
   });
 
   return app;
